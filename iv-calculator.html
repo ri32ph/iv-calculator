@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>輸液速度計算</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Lexend:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #ffffff;
+  --white:   #ffffff;
+  --pink-d:  #ec4899;
+  --pink-bg: #fdf2f8;
+  --pink-lt: #f9a8d4;
+  --blue-d:  #3b82f6;
+  --blue-bg: #eff6ff;
+  --blue-lt: #93c5fd;
+  --mint-d:  #10b981;
+  --mint-bg: #f0fdf4;
+  --mint-lt: #6ee7b7;
+  --gray:    #6b7280;
+  --bw:      2.5px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  background:var(--bg);
+  background-image:none;
+  min-height:100vh;
+  font-family:'Noto Sans JP',sans-serif;
+  color:#1e293b;
+  padding:24px 14px 60px;
+  display:flex;flex-direction:column;align-items:center;
+}
+header{text-align:center;margin-bottom:28px}
+.hico{font-size:44px;display:block;margin-bottom:6px}
+h1{font-family:'Lexend','Noto Sans JP',sans-serif;font-size:24px;font-weight:900;color:#1e293b;letter-spacing:.02em}
+h1 span{color:var(--blue-d)}
+.sub{font-size:11px;color:var(--gray);letter-spacing:.12em;margin-top:3px;font-weight:700}
+
+/* tabs */
+.tabs{display:flex;gap:8px;width:100%;max-width:500px;margin-bottom:16px}
+.tab{flex:1;padding:12px 4px;border-radius:14px;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-align:center;line-height:1.4;transition:all .18s;background:var(--white);color:var(--gray);border:var(--bw) solid #d1d5db}
+.tab .ti{display:block;font-size:20px;margin-bottom:2px}
+.tab.tp.active{background:var(--pink-bg);color:var(--pink-d);border-color:var(--pink-d);box-shadow:0 3px 12px rgba(236,72,153,.18)}
+.tab.tb.active{background:var(--blue-bg);color:var(--blue-d);border-color:var(--blue-d);box-shadow:0 3px 12px rgba(59,130,246,.18)}
+.tab.tm.active{background:var(--mint-bg);color:var(--mint-d);border-color:var(--mint-d);box-shadow:0 3px 12px rgba(16,185,129,.18)}
+
+/* card */
+.card{width:100%;max-width:500px;background:var(--white);border-radius:20px;padding:24px 18px;border:var(--bw) solid #d1d5db;box-shadow:0 4px 24px rgba(0,0,0,.07)}
+.section{display:none}.section.active{display:block}
+.field{margin-bottom:18px}
+
+label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--gray);letter-spacing:.08em;margin-bottom:8px}
+.lb{padding:2px 9px;border-radius:20px;font-size:11px;font-weight:900;letter-spacing:.04em}
+.sp .lb{background:var(--pink-bg);color:var(--pink-d);border:1.5px solid var(--pink-d)}
+.sb .lb{background:var(--blue-bg);color:var(--blue-d);border:1.5px solid var(--blue-d)}
+.sm .lb{background:var(--mint-bg);color:var(--mint-d);border:1.5px solid var(--mint-d)}
+
+.irow{display:flex;gap:8px;align-items:stretch}
+input[type=number],select{flex:1;background:#f8fafc;border:var(--bw) solid #cbd5e1;border-radius:12px;color:#0f172a;font-size:20px;font-weight:700;font-family:'Lexend',sans-serif;padding:12px 14px;outline:none;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-appearance:none;appearance:none;min-width:0}
+input[type=number]::placeholder{color:#cbd5e1;font-size:16px}
+.sp input:focus,.sp select:focus{border-color:var(--pink-d);background:var(--pink-bg);box-shadow:0 0 0 3px rgba(236,72,153,.1)}
+.sb input:focus,.sb select:focus{border-color:var(--blue-d);background:var(--blue-bg);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.sm input:focus,.sm select:focus{border-color:var(--mint-d);background:var(--mint-bg);box-shadow:0 0 0 3px rgba(16,185,129,.1)}
+.utag{background:#f1f5f9;border:var(--bw) solid #cbd5e1;border-radius:10px;padding:0 13px;font-size:12px;font-weight:700;color:var(--gray);display:flex;align-items:center;white-space:nowrap;flex-shrink:0}
+select option{background:#fff}
+
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pre{padding:5px 13px;font-size:12px;font-weight:700;border-radius:20px;cursor:pointer;transition:all .15s;font-family:'Lexend',sans-serif}
+.sp .pre{background:var(--pink-bg);color:var(--pink-d);border:1.5px solid var(--pink-lt)}
+.sp .pre:active{background:var(--pink-lt);color:#fff}
+.sb .pre{background:var(--blue-bg);color:var(--blue-d);border:1.5px solid var(--blue-lt)}
+.sb .pre:active{background:var(--blue-lt);color:#fff}
+.sm .pre{background:var(--mint-bg);color:var(--mint-d);border:1.5px solid var(--mint-lt)}
+.sm .pre:active{background:var(--mint-lt);color:#fff}
+
+.calc-btn{width:100%;margin-top:8px;padding:15px;border:none;border-radius:14px;font-family:'Lexend','Noto Sans JP',sans-serif;font-size:15px;font-weight:900;letter-spacing:.06em;cursor:pointer;transition:transform .1s,box-shadow .15s}
+.calc-btn:active{transform:scale(.97)}
+.sp .calc-btn{background:var(--pink-d);color:#fff;box-shadow:0 4px 14px rgba(236,72,153,.35)}
+.sb .calc-btn{background:var(--blue-d);color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.35)}
+.sm .calc-btn{background:var(--mint-d);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.35)}
+
+.divider{height:2px;border-radius:2px;margin:22px 0}
+.sp .divider{background:linear-gradient(90deg,var(--pink-lt),transparent)}
+.sb .divider{background:linear-gradient(90deg,var(--blue-lt),transparent)}
+.sm .divider{background:linear-gradient(90deg,var(--mint-lt),transparent)}
+
+.rwrap{animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+/* ── Drip visualizer ── */
+.dv{border-radius:16px;padding:18px 14px 14px;margin-bottom:14px;border:var(--bw) solid}
+.sp .dv{background:var(--pink-bg);border-color:var(--pink-d)}
+.sb .dv{background:var(--blue-bg);border-color:var(--blue-d)}
+.sm .dv{background:var(--mint-bg);border-color:var(--mint-d)}
+
+.dtop{display:flex;align-items:flex-start;gap:14px}
+
+/* bag column */
+.bagcol{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:44px}
+.bag-svg{width:44px;height:58px}
+.tube{width:4px;height:22px;border-radius:2px;margin-top:-1px}
+.sp .tube{background:var(--pink-d)}.sb .tube{background:var(--blue-d)}.sm .tube{background:var(--mint-d)}
+
+/* drip chamber */
+.chamber{width:24px;height:30px;border-radius:4px;border:2px solid;position:relative;overflow:hidden;margin-top:0}
+.sp .chamber{border-color:var(--pink-d);background:#fff0f8}
+.sb .chamber{border-color:var(--blue-d);background:#f0f8ff}
+.sm .chamber{border-color:var(--mint-d);background:#f0fff8}
+
+.drop{position:absolute;left:50%;transform:translateX(-50%);border-radius:50% 50% 60% 60%/40% 40% 60% 60%;opacity:0;animation:fall linear infinite}
+.sp .drop{background:var(--pink-d)}.sb .drop{background:var(--blue-d)}.sm .drop{background:var(--mint-d)}
+@keyframes fall{0%{opacity:0;top:-4px}15%{opacity:1}85%{opacity:1}100%{opacity:0;top:34px}}
+
+.ctube{width:4px;height:14px;border-radius:2px;margin-top:-1px}
+.sp .ctube{background:var(--pink-d)}.sb .ctube{background:var(--blue-d)}.sm .ctube{background:var(--mint-d)}
+
+/* numbers */
+.dnums{flex:1}
+.mlabel{font-size:11px;font-weight:700;color:var(--gray);letter-spacing:.1em;margin-bottom:4px}
+.mnum{font-family:'Lexend',sans-serif;font-size:clamp(42px,13vw,60px);font-weight:900;line-height:1;margin-bottom:2px}
+.sp .mnum{color:var(--pink-d)}.sb .mnum{color:var(--blue-d)}.sm .mnum{color:var(--mint-d)}
+.munit{font-size:13px;font-weight:700;color:var(--gray)}
+
+/* speed bar */
+.sbar-wrap{margin-top:14px}
+.sbar-labels{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--gray);margin-bottom:5px}
+.sbar-track{width:100%;height:14px;background:#e2e8f0;border-radius:99px;overflow:hidden;border:1.5px solid #cbd5e1}
+.sbar-fill{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.34,1.2,.64,1);width:0%}
+.sp .sbar-fill{background:linear-gradient(90deg,#fbcfe8,var(--pink-d))}
+.sb .sbar-fill{background:linear-gradient(90deg,#bfdbfe,var(--blue-d))}
+.sm .sbar-fill{background:linear-gradient(90deg,#a7f3d0,var(--mint-d))}
+
+/* zone ticks on bar */
+.sbar-ticks{position:relative;height:6px;margin-bottom:6px}
+.tick{position:absolute;width:2px;height:6px;border-radius:1px;background:#cbd5e1;transform:translateX(-50%)}
+
+.zone-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.zbadge{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid}
+
+/* sub grid */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scard{background:#f8fafc;border:var(--bw) solid #e2e8f0;border-radius:12px;padding:12px;text-align:center}
+.slb{font-size:10px;font-weight:700;color:var(--gray);margin-bottom:4px;letter-spacing:.06em}
+.sv{font-family:'Lexend',sans-serif;font-size:22px;font-weight:900}
+.su{font-size:10px;color:var(--gray);font-weight:700;margin-top:1px}
+.sp .sv{color:var(--pink-d)}.sb .sv{color:var(--blue-d)}.sm .sv{color:var(--mint-d)}
+
+.warn{display:none;margin-top:12px;background:#fff7ed;border:var(--bw) solid #f97316;border-radius:12px;padding:11px 14px;font-size:13px;color:#c2410c;font-weight:700;align-items:center;gap:8px}
+.warn.show{display:flex}
+
+.note{text-align:center;font-size:11px;color:var(--gray);margin-top:20px;line-height:1.9;background:var(--white);border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 16px;max-width:500px;width:100%}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="hico">🏥</span>
+  <h1>輸液速度<span>計算</span></h1>
+  <p class="sub">IV DRIP RATE CALCULATOR</p>
+</header>
+
+<div class="tabs">
+  <button class="tab tp active" onclick="sw(0)"><span class="ti">💧</span>滴数<br>計算</button>
+  <button class="tab tb" onclick="sw(1)"><span class="ti">⚡</span>速度→<br>滴数</button>
+  <button class="tab tm" onclick="sw(2)"><span class="ti">⏱️</span>投与<br>時間</button>
+</div>
+
+<div class="card">
+
+<!-- s0 -->
+<div class="section sp active" id="s0">
+  <div class="field">
+    <label><span class="lb">総輸液量</span></label>
+    <div class="irow"><input type="number" id="v0" placeholder="500" min="1" inputmode="numeric"><div class="utag">mL</div></div>
+    <div class="presets">
+      <button class="pre" onclick="sv('v0',100)">100mL</button>
+      <button class="pre" onclick="sv('v0',250)">250mL</button>
+      <button class="pre" onclick="sv('v0',500)">500mL</button>
+      <button class="pre" onclick="sv('v0',1000)">1000mL</button>
+    </div>
+  </div>
+  <div class="field">
+    <label><span class="lb">投与時間</span></label>
+    <div class="irow">
+      <input type="number" id="h0" placeholder="8" min="0" inputmode="numeric"><div class="utag">時間</div>
+      <input type="number" id="m0" placeholder="0" min="0" max="59" inputmode="numeric"><div class="utag">分</div>
+    </div>
+  </div>
+  <div class="field">
+    <label><span class="lb">輸液セット</span></label>
+    <select id="st0"><option value="20">成人用（20滴/mL）</option><option value="60">小児用（60滴/mL）</option></select>
+  </div>
+  <button class="calc-btn" onclick="c0()">計算する →</button>
+  <div id="r0" style="display:none">
+    <div class="divider"></div>
+    <div class="rwrap">
+      <div class="dv">
+        <div class="dtop">
+          <div class="bagcol">
+            <svg class="bag-svg" viewBox="0 0 44 58" fill="none">
+              <rect x="13" y="1" width="18" height="7" rx="3.5" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/>
+              <rect x="3" y="8" width="38" height="38" rx="10" fill="#fdf2f8" stroke="#ec4899" stroke-width="2.5"/>
+              <rect id="bf0" x="5" y="24" width="34" height="20" rx="7" fill="#f9a8d4" opacity=".55"/>
+              <rect x="18" y="46" width="8" height="8" rx="2.5" fill="#ec4899"/>
+            </svg>
+            <div class="tube"></div>
+            <div class="chamber" id="ch0"></div>
+            <div class="ctube"></div>
+          </div>
+          <div class="dnums">
+            <div class="mlabel">1分あたりの滴数</div>
+            <div class="mnum" id="r0d">—</div>
+            <div class="munit">滴 / 分</div>
+          </div>
+        </div>
+        <div class="sbar-wrap">
+          <div class="sbar-labels"><span>遅い</span><span id="r0sl">—</span><span>速い</span></div>
+          <div class="sbar-ticks">
+            <div class="tick" style="left:33%"></div>
+            <div class="tick" style="left:66%"></div>
+          </div>
+          <div class="sbar-track"><div class="sbar-fill" id="r0b"></div></div>
+          <div class="zone-row" id="r0z"></div>
+        </div>
+      </div>
+      <div class="sgrid">
+        <div class="scard"><div class="slb">mL / 時間</div><div class="sv" id="r0h">—</div><div class="su">mL/h</div></div>
+        <div class="scard"><div class="slb">秒 / 滴</div><div class="sv" id="r0s">—</div><div class="su">秒</div></div>
+      </div>
+      <div class="warn" id="w0">⚠️ <span id="w0t"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- s1 -->
+<div class="section sb" id="s1">
+  <div class="field">
+    <label><span class="lb">流量</span></label>
+    <div class="irow"><input type="number" id="v1" placeholder="62.5" min="0.1" step="0.1" inputmode="decimal"><div class="utag">mL/h</div></div>
+    <div class="presets">
+      <button class="pre" onclick="sv('v1',30)">30</button>
+      <button class="pre" onclick="sv('v1',60)">60</button>
+      <button class="pre" onclick="sv('v1',100)">100</button>
+      <button class="pre" onclick="sv('v1',125)">125</button>
+    </div>
+  </div>
+  <div class="field">
+    <label><span class="lb">輸液セット</span></label>
+    <select id="st1"><option value="20">成人用（20滴/mL）</option><option value="60">小児用（60滴/mL）</option></select>
+  </div>
+  <button class="calc-btn" onclick="c1()">計算する →</button>
+  <div id="r1" style="display:none">
+    <div class="divider"></div>
+    <div class="rwrap">
+      <div class="dv">
+        <div class="dtop">
+          <div class="bagcol">
+            <svg class="bag-svg" viewBox="0 0 44 58" fill="none">
+              <rect x="13" y="1" width="18" height="7" rx="3.5" fill="#93c5fd" stroke="#3b82f6" stroke-width="2"/>
+              <rect x="3" y="8" width="38" height="38" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="2.5"/>
+              <rect id="bf1" x="5" y="24" width="34" height="20" rx="7" fill="#93c5fd" opacity=".55"/>
+              <rect x="18" y="46" width="8" height="8" rx="2.5" fill="#3b82f6"/>
+            </svg>
+            <div class="tube"></div>
+            <div class="chamber" id="ch1"></div>
+            <div class="ctube"></div>
+          </div>
+          <div class="dnums">
+            <div class="mlabel">1分あたりの滴数</div>
+            <div class="mnum" id="r1d">—</div>
+            <div class="munit">滴 / 分</div>
+          </div>
+        </div>
+        <div class="sbar-wrap">
+          <div class="sbar-labels"><span>遅い</span><span id="r1sl">—</span><span>速い</span></div>
+          <div class="sbar-ticks">
+            <div class="tick" style="left:33%"></div>
+            <div class="tick" style="left:66%"></div>
+          </div>
+          <div class="sbar-track"><div class="sbar-fill" id="r1b"></div></div>
+          <div class="zone-row" id="r1z"></div>
+        </div>
+      </div>
+      <div class="sgrid">
+        <div class="scard"><div class="slb">秒 / 滴</div><div class="sv" id="r1s">—</div><div class="su">秒</div></div>
+        <div class="scard"><div class="slb">mL / 分</div><div class="sv" id="r1m">—</div><div class="su">mL/min</div></div>
+      </div>
+      <div class="warn" id="w1">⚠️ <span id="w1t"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- s2 -->
+<div class="section sm" id="s2">
+  <div class="field">
+    <label><span class="lb">総輸液量</span></label>
+    <div class="irow"><input type="number" id="v2" placeholder="500" min="1" inputmode="numeric"><div class="utag">mL</div></div>
+  </div>
+  <div class="field">
+    <label><span class="lb">流量</span></label>
+    <div class="irow"><input type="number" id="v2r" placeholder="62.5" min="0.1" step="0.1" inputmode="decimal"><div class="utag">mL/h</div></div>
+  </div>
+  <button class="calc-btn" onclick="c2()">計算する →</button>
+  <div id="r2" style="display:none">
+    <div class="divider"></div>
+    <div class="rwrap">
+      <div class="dv">
+        <div class="dtop">
+          <div class="bagcol">
+            <svg class="bag-svg" viewBox="0 0 44 58" fill="none">
+              <rect x="13" y="1" width="18" height="7" rx="3.5" fill="#6ee7b7" stroke="#10b981" stroke-width="2"/>
+              <rect x="3" y="8" width="38" height="38" rx="10" fill="#f0fdf4" stroke="#10b981" stroke-width="2.5"/>
+              <rect id="bf2" x="5" y="24" width="34" height="20" rx="7" fill="#6ee7b7" opacity=".55"/>
+              <rect x="18" y="46" width="8" height="8" rx="2.5" fill="#10b981"/>
+            </svg>
+            <div class="tube"></div>
+            <div class="chamber" id="ch2"></div>
+            <div class="ctube"></div>
+          </div>
+          <div class="dnums">
+            <div class="mlabel">投与完了まで</div>
+            <div class="mnum" id="r2t" style="font-size:clamp(30px,9vw,46px)">—</div>
+            <div class="munit"></div>
+          </div>
+        </div>
+        <div class="sbar-wrap">
+          <div class="sbar-labels"><span>開始</span><span id="r2sl">合計時間</span><span>完了</span></div>
+          <div class="sbar-track"><div class="sbar-fill" id="r2b"></div></div>
+        </div>
+      </div>
+      <div class="sgrid">
+        <div class="scard"><div class="slb">時間（h）</div><div class="sv" id="r2h">—</div><div class="su">h</div></div>
+        <div class="scard"><div class="slb">残り（min）</div><div class="sv" id="r2m">—</div><div class="su">min</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<p class="note">⚠️ 本ツールは学習・参考用です。<br>実際の臨床判断は必ず医師・薬剤師の指示に従ってください。</p>
+
+<script>
+function sw(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
+  document.querySelectorAll('.section').forEach((s,j)=>s.classList.toggle('active',i===j));
+}
+function sv(id,v){document.getElementById(id).value=v}
+
+function setDrops(chamberId, dropsPerMin){
+  const ch = document.getElementById(chamberId);
+  ch.innerHTML = '';
+  if(!dropsPerMin||dropsPerMin<=0) return;
+  const interval = Math.max(60/dropsPerMin, 0.4); // seconds between drops
+  // show 2-3 drops cycling
+  const count = Math.max(2, Math.min(4, Math.ceil(2/interval)+1));
+  const dropW = 8, dropH = 10;
+  for(let i=0;i<count;i++){
+    const d = document.createElement('div');
+    d.className = 'drop';
+    d.style.width = dropW+'px';
+    d.style.height = dropH+'px';
+    d.style.animationDuration = interval+'s';
+    d.style.animationDelay = (-(interval*i/count))+'s';
+    ch.appendChild(d);
+  }
+}
+
+function zone(drops){
+  if(drops<=0) return null;
+  if(drops<=20)  return {label:'🟢 ゆっくり (〜20滴/分)',  c:'#10b981',bg:'#f0fdf4',bc:'#10b981'};
+  if(drops<=40)  return {label:'🟡 標準 (21〜40滴/分)',   c:'#f59e0b',bg:'#fffbeb',bc:'#f59e0b'};
+  if(drops<=60)  return {label:'🟠 やや速い (41〜60滴/分)',c:'#f97316',bg:'#fff7ed',bc:'#f97316'};
+  return            {label:'🔴 速すぎ！ (60滴/分超)',   c:'#ef4444',bg:'#fef2f2',bc:'#ef4444'};
+}
+
+function renderZone(id,drops){
+  const z=zone(drops); if(!z) return;
+  document.getElementById(id).innerHTML=`<div class="zbadge" style="background:${z.bg};color:${z.c};border-color:${z.bc}">${z.label}</div>`;
+}
+
+function anim(id){
+  const e=document.getElementById(id).querySelector('.rwrap');
+  e.style.animation='none'; void e.offsetWidth; e.style.animation='';
+}
+
+function c0(){
+  const vol=parseFloat(document.getElementById('v0').value);
+  const hr=parseFloat(document.getElementById('h0').value)||0;
+  const mn=parseFloat(document.getElementById('m0').value)||0;
+  const dpm=parseInt(document.getElementById('st0').value);
+  if(!vol||(hr===0&&mn===0)){alert('値を入力してください');return;}
+  const tm=hr*60+mn, mlm=vol/tm, drops=mlm*dpm;
+  document.getElementById('r0d').textContent=drops.toFixed(1);
+  document.getElementById('r0h').textContent=(mlm*60).toFixed(1);
+  document.getElementById('r0s').textContent=(60/drops).toFixed(1);
+  const pct=Math.min((drops/60)*100,100);
+  document.getElementById('r0b').style.width=pct+'%';
+  document.getElementById('r0sl').textContent=drops.toFixed(1)+'滴/分';
+  renderZone('r0z',drops);
+  setDrops('ch0',drops);
+  document.getElementById('r0').style.display='block'; anim('r0');
+  const w=document.getElementById('w0');
+  if(drops>60){document.getElementById('w0t').textContent='速度が速すぎます！ 医師・薬剤師にご確認ください';w.classList.add('show');}
+  else w.classList.remove('show');
+}
+
+function c1(){
+  const rate=parseFloat(document.getElementById('v1').value);
+  const dpm=parseInt(document.getElementById('st1').value);
+  if(!rate){alert('値を入力してください');return;}
+  const drops=(rate*dpm)/60;
+  document.getElementById('r1d').textContent=drops.toFixed(1);
+  document.getElementById('r1s').textContent=(60/drops).toFixed(1);
+  document.getElementById('r1m').textContent=(rate/60).toFixed(2);
+  const pct=Math.min((drops/60)*100,100);
+  document.getElementById('r1b').style.width=pct+'%';
+  document.getElementById('r1sl').textContent=drops.toFixed(1)+'滴/分';
+  renderZone('r1z',drops);
+  setDrops('ch1',drops);
+  document.getElementById('r1').style.display='block'; anim('r1');
+  const w=document.getElementById('w1');
+  if(drops>60){document.getElementById('w1t').textContent='速度が速すぎます！ 医師・薬剤師にご確認ください';w.classList.add('show');}
+  else w.classList.remove('show');
+}
+
+function c2(){
+  const vol=parseFloat(document.getElementById('v2').value);
+  const rate=parseFloat(document.getElementById('v2r').value);
+  if(!vol||!rate){alert('値を入力してください');return;}
+  const th=vol/rate, h=Math.floor(th), m=Math.round((th-h)*60);
+  document.getElementById('r2t').textContent=h+'h '+String(m).padStart(2,'0')+'m';
+  document.getElementById('r2h').textContent=h;
+  document.getElementById('r2m').textContent=m;
+  document.getElementById('r2sl').textContent='合計 '+h+'h'+String(m).padStart(2,'0')+'m';
+  document.getElementById('r2b').style.width='0%';
+  setTimeout(()=>document.getElementById('r2b').style.width='100%',200);
+  setDrops('ch2',20);
+  document.getElementById('r2').style.display='block'; anim('r2');
+}
+</script>
+</body>
+</html>
