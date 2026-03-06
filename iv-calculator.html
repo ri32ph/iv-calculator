@@ -149,6 +149,35 @@ select option{background:#fff}
 .warn{display:none;margin-top:12px;background:#fff7ed;border:var(--bw) solid #f97316;border-radius:12px;padding:11px 14px;font-size:13px;color:#c2410c;font-weight:700;align-items:center;gap:8px}
 .warn.show{display:flex}
 
+/* ── 秒あたり滴数セレクター ── */
+.interval-box{margin-top:12px;border-radius:14px;padding:14px 14px 16px;border:var(--bw) solid}
+.sp .interval-box{background:var(--pink-bg);border-color:var(--pink-d)}
+.sb .interval-box{background:var(--blue-bg);border-color:var(--blue-d)}
+.interval-title{font-size:11px;font-weight:700;color:var(--gray);letter-spacing:.08em;margin-bottom:10px}
+.interval-btns{display:flex;gap:8px;margin-bottom:12px}
+.ibtn{flex:1;padding:9px 4px;border-radius:10px;font-family:'Lexend',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;border:var(--bw) solid;background:var(--white)}
+.sp .ibtn{color:var(--pink-d);border-color:var(--pink-lt)}
+.sp .ibtn.on{background:var(--pink-d);color:#fff;border-color:var(--pink-d);box-shadow:0 3px 10px rgba(236,72,153,.3)}
+.sb .ibtn{color:var(--blue-d);border-color:var(--blue-lt)}
+.sb .ibtn.on{background:var(--blue-d);color:#fff;border-color:var(--blue-d);box-shadow:0 3px 10px rgba(59,130,246,.3)}
+.interval-result{display:flex;align-items:baseline;gap:8px;justify-content:center;padding:12px;border-radius:10px;border:2px solid}
+.sp .interval-result{background:#fff;border-color:var(--pink-lt)}
+.sb .interval-result{background:#fff;border-color:var(--blue-lt)}
+.iresult-num{font-family:'Lexend',sans-serif;font-size:clamp(36px,11vw,52px);font-weight:900;line-height:1}
+.sp .iresult-num{color:var(--pink-d)}.sb .iresult-num{color:var(--blue-d)}
+.iresult-unit{font-size:14px;font-weight:700;color:var(--gray)}
+
+/* ── 何秒に1滴 big banner ── */
+.sec-banner{border-radius:16px;padding:16px 18px;margin-bottom:14px;border:var(--bw) solid;display:flex;align-items:center;gap:14px}
+.sp .sec-banner{background:#fdf2f8;border-color:var(--pink-d)}
+.sb .sec-banner{background:#eff6ff;border-color:var(--blue-d)}
+.sec-icon{font-size:32px;flex-shrink:0}
+.sec-body{flex:1}
+.sec-label{font-size:11px;font-weight:700;color:var(--gray);letter-spacing:.1em;margin-bottom:2px}
+.sec-num{font-family:'Lexend',sans-serif;font-size:clamp(48px,15vw,72px);font-weight:900;line-height:1}
+.sp .sec-num{color:var(--pink-d)}.sb .sec-num{color:var(--blue-d)}
+.sec-unit{font-size:14px;font-weight:700;color:var(--gray);margin-top:2px}
+
 .note{text-align:center;font-size:11px;color:var(--gray);margin-top:20px;line-height:1.9;background:var(--white);border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 16px;max-width:500px;width:100%}
 </style>
 </head>
@@ -228,6 +257,18 @@ select option{background:#fff}
         <div class="scard"><div class="slb">mL / 時間</div><div class="sv" id="r0h">—</div><div class="su">mL/h</div></div>
         <div class="scard"><div class="slb">秒 / 滴</div><div class="sv" id="r0s">—</div><div class="su">秒</div></div>
       </div>
+      <div class="interval-box">
+        <div class="interval-title">⏱ 何秒あたり何滴？</div>
+        <div class="interval-btns">
+          <button class="ibtn on" onclick="setInterval0(10)" id="ib0_10">10秒</button>
+          <button class="ibtn"    onclick="setInterval0(15)" id="ib0_15">15秒</button>
+          <button class="ibtn"    onclick="setInterval0(20)" id="ib0_20">20秒</button>
+        </div>
+        <div class="interval-result">
+          <div class="iresult-num" id="i0_num">—</div>
+          <div class="iresult-unit" id="i0_unit">滴 / 10秒</div>
+        </div>
+      </div>
       <div class="warn" id="w0">⚠️ <span id="w0t"></span></div>
     </div>
   </div>
@@ -285,6 +326,18 @@ select option{background:#fff}
       <div class="sgrid">
         <div class="scard"><div class="slb">秒 / 滴</div><div class="sv" id="r1s">—</div><div class="su">秒</div></div>
         <div class="scard"><div class="slb">mL / 分</div><div class="sv" id="r1m">—</div><div class="su">mL/min</div></div>
+      </div>
+      <div class="interval-box">
+        <div class="interval-title">⏱ 何秒あたり何滴？</div>
+        <div class="interval-btns">
+          <button class="ibtn on" onclick="setInterval1(10)" id="ib1_10">10秒</button>
+          <button class="ibtn"    onclick="setInterval1(15)" id="ib1_15">15秒</button>
+          <button class="ibtn"    onclick="setInterval1(20)" id="ib1_20">20秒</button>
+        </div>
+        <div class="interval-result">
+          <div class="iresult-num" id="i1_num">—</div>
+          <div class="iresult-unit" id="i1_unit">滴 / 10秒</div>
+        </div>
       </div>
       <div class="warn" id="w1">⚠️ <span id="w1t"></span></div>
     </div>
@@ -348,19 +401,41 @@ function sw(i){
 }
 function sv(id,v){document.getElementById(id).value=v}
 
+let drops0=0, drops1=0, iSel0=10, iSel1=10;
+
+function setInterval0(sec){
+  iSel0=sec;
+  [10,15,20].forEach(s=>document.getElementById('ib0_'+s).classList.toggle('on',s===sec));
+  showInterval(0);
+}
+function setInterval1(sec){
+  iSel1=sec;
+  [10,15,20].forEach(s=>document.getElementById('ib1_'+s).classList.toggle('on',s===sec));
+  showInterval(1);
+}
+function showInterval(tab){
+  if(tab===0){
+    const v=(drops0*iSel0/60);
+    document.getElementById('i0_num').textContent=v.toFixed(1);
+    document.getElementById('i0_unit').textContent='滴 / '+iSel0+'秒';
+  } else {
+    const v=(drops1*iSel1/60);
+    document.getElementById('i1_num').textContent=v.toFixed(1);
+    document.getElementById('i1_unit').textContent='滴 / '+iSel1+'秒';
+  }
+}
+
 function setDrops(chamberId, dropsPerMin){
   const ch = document.getElementById(chamberId);
   ch.innerHTML = '';
   if(!dropsPerMin||dropsPerMin<=0) return;
-  const interval = Math.max(60/dropsPerMin, 0.4); // seconds between drops
-  // show 2-3 drops cycling
+  const interval = Math.max(60/dropsPerMin, 0.4);
   const count = Math.max(2, Math.min(4, Math.ceil(2/interval)+1));
-  const dropW = 8, dropH = 10;
   for(let i=0;i<count;i++){
     const d = document.createElement('div');
     d.className = 'drop';
-    d.style.width = dropW+'px';
-    d.style.height = dropH+'px';
+    d.style.width = '8px';
+    d.style.height = '10px';
     d.style.animationDuration = interval+'s';
     d.style.animationDelay = (-(interval*i/count))+'s';
     ch.appendChild(d);
@@ -400,6 +475,7 @@ function c0(){
   document.getElementById('r0sl').textContent=drops.toFixed(1)+'滴/分';
   renderZone('r0z',drops);
   setDrops('ch0',drops);
+  drops0=drops; showInterval(0);
   document.getElementById('r0').style.display='block'; anim('r0');
   const w=document.getElementById('w0');
   if(drops>60){document.getElementById('w0t').textContent='速度が速すぎます！ 医師・薬剤師にご確認ください';w.classList.add('show');}
@@ -419,6 +495,7 @@ function c1(){
   document.getElementById('r1sl').textContent=drops.toFixed(1)+'滴/分';
   renderZone('r1z',drops);
   setDrops('ch1',drops);
+  drops1=drops; showInterval(1);
   document.getElementById('r1').style.display='block'; anim('r1');
   const w=document.getElementById('w1');
   if(drops>60){document.getElementById('w1t').textContent='速度が速すぎます！ 医師・薬剤師にご確認ください';w.classList.add('show');}
